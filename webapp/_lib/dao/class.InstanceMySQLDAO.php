@@ -78,8 +78,8 @@ class InstanceMySQLDAO extends PDOCorePluginDAO implements InstanceDAO, Filtered
             $q .= "AND oi.owner_id = :owner_id ";
         }
         $q .= "AND is_active = 1 ";
-        if ($this->hasInstanceFilter()) {
-        	$q .= $this->getInstanceFilter();
+        if ($this->hasCrawlFilter()) {
+        	$q .= $this->getCrawlFilter();
         }
         $q .= "ORDER BY crawler_last_run";
         $vars = array(

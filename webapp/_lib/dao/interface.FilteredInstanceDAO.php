@@ -37,12 +37,12 @@ interface FilteredInstanceDAO {
      * Get SQL filter to add to instance query
      * @return str SQL filter
      */
-    public function getInstanceFilter();
+    public function getCrawlFilter();
     
     /**
      * Establish if an instance query filter is required
      * @return bool true if filter is needed
      */
-    public function hasInstanceFilter();
+    public function hasCrawlFilter();
     
 }
