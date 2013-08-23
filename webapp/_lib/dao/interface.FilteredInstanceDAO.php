@@ -22,6 +22,8 @@
  *
  *
  * Filtered Instance Data Access Object Interface
+ * Used to add a filter to retrieved instances, which can be used to optimise or
+ * paralelise crawling.
  *
  * @license http://www.gnu.org/licenses/gpl.html
  * @copyright 2013 Eduard Cucurella, Daniel Giribet
@@ -32,9 +34,15 @@
 interface FilteredInstanceDAO {
     
     /**
-     * Get SQL filter to add to query
+     * Get SQL filter to add to instance query
      * @return str SQL filter
      */
-    public function getFilter();
+    public function getInstanceFilter();
+    
+    /**
+     * Establish if an instance query filter is required
+     * @return bool true if filter is needed
+     */
+    public function hasInstanceFilter();
     
 }
