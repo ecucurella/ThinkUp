@@ -27,7 +27,7 @@
  * @copyright 2009-2013 Gina Trapani, Mark Wilkie, Guillaume Boudreau
  * @author Gina Trapani <ginatrapani[at]gmail[dot]com>
  */
-class InstanceMySQLDAO extends PDOCorePluginDAO implements InstanceDAO {
+class InstanceMySQLDAO extends PDOCorePluginDAO implements InstanceDAO, FilteredInstanceDAO {
     public function __construct() {
         parent::__construct("Instance", "instances");
     }
@@ -78,6 +78,7 @@ class InstanceMySQLDAO extends PDOCorePluginDAO implements InstanceDAO {
             $q .= "AND oi.owner_id = :owner_id ";
         }
         $q .= "AND is_active = 1 ";
+        $q .= $this->getFilter();
         $q .= "ORDER BY crawler_last_run";
         $vars = array(
             ':network'=>$network
@@ -621,5 +622,16 @@ class InstanceMySQLDAO extends PDOCorePluginDAO implements InstanceDAO {
         if ($this->profiler_enabled) { Profiler::setDAOMethod(__METHOD__); }
         $ps = $this->execute($q, $vars);
         return $this->getUpdateCount($ps);
+    }
+    
+    public function getFilter() {
+        //check if CrawlFilter is needed
+        if (CrawlFilter::isFilterNeeded() && CrawlFilter::getFilter()>-1 && CrawlFilter::getSelected()>-1) {
+            $q = "AND mod(tu_instances.id,".CrawlFilter::getFilter().")=".CrawlFilter::getSelected()." ";
+            CrawlFilter::setFilterUsed();
+        } else{
+            $q="";
+        }
+        return $q;
     }
 }
