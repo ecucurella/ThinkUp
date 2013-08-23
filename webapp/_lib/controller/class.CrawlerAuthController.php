@@ -82,8 +82,10 @@ class CrawlerAuthController extends ThinkUpController {
             if ( $owner_dao->isOwnerAuthorized($username, $pw)) {
                 $authorized = true;
                 Session::completeLogin($owner);
+                $output="COMPLETELOGIN";
                 if (isset($numfilter) && isset($selected) && is_numeric($numfilter) && is_numeric($selected)) {
                     CrawlFilter::setFilterParameters($numfilter,$selected);
+                    $output ="FILTER=".CrawlFilter::getFilter()."SELECTED=".CrawlFilter::getSelected();
                 }
             } else {
                 $output = "ERROR: Incorrect username and password.";
@@ -91,6 +93,7 @@ class CrawlerAuthController extends ThinkUpController {
         } else { // check user is logged in on the web
             if ( $this->isLoggedIn() ) {
                 $authorized = true;
+                $output="ISLOGGEDIN";
             } else {
                 $output = "ERROR: Invalid or missing username and password.";
             }
