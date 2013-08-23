@@ -78,7 +78,9 @@ class InstanceMySQLDAO extends PDOCorePluginDAO implements InstanceDAO, Filtered
             $q .= "AND oi.owner_id = :owner_id ";
         }
         $q .= "AND is_active = 1 ";
-        $q .= $this->getFilter();
+        if ($this->hasInstanceFilter()) {
+        	$q .= $this->getInstanceFilter();
+        }
         $q .= "ORDER BY crawler_last_run";
         $vars = array(
             ':network'=>$network
@@ -624,14 +626,13 @@ class InstanceMySQLDAO extends PDOCorePluginDAO implements InstanceDAO, Filtered
         return $this->getUpdateCount($ps);
     }
     
-    public function getFilter() {
-        //check if CrawlFilter is needed
-        if (CrawlFilter::isFilterNeeded() && CrawlFilter::getFilter()>-1 && CrawlFilter::getSelected()>-1) {
-            $q = "AND mod(tu_instances.id,".CrawlFilter::getFilter().")=".CrawlFilter::getSelected()." ";
-            CrawlFilter::setFilterUsed();
-        } else{
-            $q="";
-        }
+    public function getCrawlFilter() {
+        $q = "AND mod(tu_instances.id,".CrawlFilter::getFilter().")=".CrawlFilter::getSelected()." ";
+        CrawlFilter::setFilterUsed();
         return $q;
+    }
+    
+    public function hasCrawlFilter() {
+    	return CrawlFilter::isFilterNeeded() && CrawlFilter::getFilter()>-1 && CrawlFilter::getSelected()>-1;
     }
 }
