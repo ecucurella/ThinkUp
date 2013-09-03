@@ -628,7 +628,6 @@ class InstanceMySQLDAO extends PDOCorePluginDAO implements InstanceDAO, Filtered
     
     public function getCrawlFilter() {
         $q = "AND mod(tu_instances.id,".CrawlFilter::getFilter().")=".CrawlFilter::getSelected()." ";
-        CrawlFilter::setFilterUsed();
         return $q;
     }
     
