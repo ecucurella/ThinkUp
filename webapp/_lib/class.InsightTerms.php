@@ -112,6 +112,28 @@ class InsightTerms {
     }
 
     /**
+     * Get a localized phrase for the action of adding a user as a friend
+     * @param str $user the subject who has been added as a friend
+     * @return str localized phrase for adding a user as a friend
+     **/
+    public function getPhraseForAddingAsFriend($user) {
+        switch ($this->network) {
+            case 'twitter':
+                return "followed ".$user;
+                break;
+
+            case 'google+':
+                return "added ".$user." to new circles";
+                break;
+
+            default:
+                return "added ".$user." as a friend";
+                break;
+        }
+    }
+
+    /**
+>>>>>>> origin/check_saved_searches
      * Get the localized noun for the term 'post'.
      * @param str $network network whose localization has to be followed
      * @param bool $plural whether the term to be returned is plural or not
@@ -291,4 +313,49 @@ class InsightTerms {
             }
         }
     }
+
+    /**
+     * Converts a string containing 1 time or 2 times to once / twice
+     * @param  int $number The number to be converted
+     * @return str A string expressing the number of occurrences in conversational terms
+     */
+    public function getOccurrencesAdverb($number) {
+        if ($number == 1) {
+            return 'once';
+        } elseif ($number == 2) {
+            return 'twice';
+        } else {
+            return $number ." times";
+        }
+    }
+
+    /**
+     * Converts a numerical multiplier such as 2 to its string equivalent, such as 'double'.
+     * @param  int $number The number to be converted
+     * @return str A string expressing the multiplier in conversational terms
+     */
+    public function getMultiplierAdverb($number) {
+        if ($number >= 1) {
+            if ($number >= 5) {
+                return round($number,2).'x';
+            } elseif ($number >= 4) {
+                return 'quadruple';
+            } elseif ($number >= 3) {
+                return 'triple';
+            } elseif ($number >= 2) {
+                return 'double';
+            } else {
+                return round($number,2).'x';
+            }
+        } elseif ($number >= 0.5) {
+            return 'half';
+        } elseif ($number >= 0.3) {
+            return 'a third of';
+        } elseif ($number >= 0.25) {
+            return 'a quarter of';
+        } else {
+            return round($number,2).'x';
+        }
+    }
+>>>>>>> origin/check_saved_searches
 }

@@ -62,6 +62,27 @@ class TestOfInsightTerms extends ThinkUpBasicUnitTestCase {
         $this->assertNotNull($terms);
         $this->assertEqual($text, "Your status update got 3 comments from 2 friends");
     }
+	
+    public function testGetMultiplierAdverb() {
+        $terms = new InsightTerms('youtube');
+        $this->assertEqual($terms->getMultiplierAdverb(1), '1x');
+        $this->assertEqual($terms->getMultiplierAdverb(2), 'double');
+        $this->assertEqual($terms->getMultiplierAdverb(3), 'triple');
+        $this->assertEqual($terms->getMultiplierAdverb(4), 'quadruple');
+        $this->assertEqual($terms->getMultiplierAdverb(5), '5x');
+        $this->assertEqual($terms->getMultiplierAdverb(1), '1x');
+        $this->assertEqual($terms->getMultiplierAdverb(0.5), 'half');
+        $this->assertEqual($terms->getMultiplierAdverb(0.3), 'a third of');
+        $this->assertEqual($terms->getMultiplierAdverb(0.25), 'a quarter of');
+        $this->assertEqual($terms->getMultiplierAdverb(0.1), '0.1x');
+    }
+
+    public function testGetOccurrencesAdverb() {
+        $terms = new InsightTerms('youtube');
+        $this->assertEqual($terms->getOccurrencesAdverb(1), 'once');
+        $this->assertEqual($terms->getOccurrencesAdverb(2), 'twice');
+        $this->assertEqual($terms->getOccurrencesAdverb(3), '3 times');
+    }
 
     public function testGetSyntacticTimeDifference() {
         $delta_1 = 60 * 60 * 3; // 3 hours
@@ -78,5 +99,23 @@ class TestOfInsightTerms extends ThinkUpBasicUnitTestCase {
         $this->assertEqual($result_2, '6 minutes');
         $this->assertEqual($result_3, '4 days');
         $this->assertEqual($result_4, '1 day');
+    }
+
+    public function testGetPhraseForAddingAsFriend() {
+        $terms = new InsightTerms('google+');
+
+        $result_1 = $terms->getPhraseForAddingAsFriend('testeriffic');
+
+        $terms = new InsightTerms('facebook');
+
+        $result_2 = $terms->getPhraseForAddingAsFriend('testeriffic');
+
+        $terms = new InsightTerms('twitter');
+
+        $result_3 = $terms->getPhraseForAddingAsFriend('@testeriffic');
+
+        $this->assertEqual($result_1, "added testeriffic to new circles");
+        $this->assertEqual($result_2, "added testeriffic as a friend");
+        $this->assertEqual($result_3, "followed @testeriffic");
     }
 }

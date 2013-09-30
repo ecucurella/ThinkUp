@@ -986,30 +986,27 @@ class TwitterCrawler {
      * Fetch user from Twitter and add to DB
      * @param int $fid
      * @param str $source Place where user was found
+     * @throws APICallLimitExceededException
      */
     private function fetchAndAddUser($fid, $source) {
         $status_message = "";
         $endpoint = $this->api->endpoints['show_user'];
-        try {
-            list($http_status, $payload) = $this->api->apiRequest($endpoint, array(), $fid);
-            if ($http_status == 200) {
-                $user_arr = $this->api->parseJSONUser($payload);
-                if (isset($user_arr[0])) {
-                    $user = new User($user_arr[0], $source);
-                    $this->user_dao->updateUser($user);
-                    $status_message = 'Added/updated user '.$user->username." in database";
-                }
-            } elseif ($http_status == 404) {
-                $e = $this->api->parseJSONError($payload);
-                $usererror_dao = DAOFactory::getDAO('UserErrorDAO');
-                $usererror_dao->insertError($fid, $http_status, $e['error'], $this->user->user_id, 'twitter');
-                $status_message = 'User error saved.';
+        list($http_status, $payload) = $this->api->apiRequest($endpoint, array(), $fid);
+        if ($http_status == 200) {
+            $user_arr = $this->api->parseJSONUser($payload);
+            if (isset($user_arr[0])) {
+                $user = new User($user_arr[0], $source);
+                $this->user_dao->updateUser($user);
+                $status_message = 'Added/updated user '.$user->username." in database";
             }
-            $this->logger->logInfo($status_message, __METHOD__.','.__LINE__);
-            $status_message = "";
-        } catch (APICallLimitExceededException $e) {
-            $this->logger->logInfo($e->getMessage(), __METHOD__.','.__LINE__);
+        } elseif ($http_status == 404) {
+            $e = $this->api->parseJSONError($payload);
+            $usererror_dao = DAOFactory::getDAO('UserErrorDAO');
+            $usererror_dao->insertError($fid, $http_status, $e['error'], $this->user->user_id, 'twitter');
+            $status_message = 'User error saved.';
         }
+        $this->logger->logInfo($status_message, __METHOD__.','.__LINE__);
+        $status_message = "";
     }
     /**
      * For each API call left, grab oldest follow relationship, check if it exists, and update table.
@@ -1168,6 +1165,9 @@ class TwitterCrawler {
             $continue_fetching = true;
             $since_id = 0;
             $max_id = 0;
+            $hashtag_count_cache = 0;
+            $capture_old_tweets = false;
+            $save_last_post_id = false;
             $instance_hashtag_dao = DAOFactory::getDAO('InstanceHashtagDAO');
             $post_dao = DAOFactory::getDAO('PostDAO');
             $user_dao = DAOFactory::getDAO('UserDAO');
@@ -1176,6 +1176,22 @@ class TwitterCrawler {
 
             //Get hashtag
             $hashtag = $hashtag_dao->getHashtagByID($instance_hashtag->hashtag_id);
+
+            //TODO: Change table column names last_post_id for since_post_id
+            //TODO: Change table column names earliest_post_id for max_post_id    
+            $hashtag_count_cache = $hashtag->count_cache;
+            
+            //if last_post_id is zero means that we still must save old tweets
+            if ($instance_hashtag->last_post_id == 0)  {
+                $max_id = $instance_hashtag->earliest_post_id; 
+                $capture_old_tweets = true;
+            } else {
+                //if earliest_post_id > last_post_id we are saving tweets between new and old ones
+                $since_id = $instance_hashtag->last_post_id;
+                if ($instance_hashtag->earliest_post_id > $instance_hashtag->last_post_id) {
+                    $max_id = $instance_hashtag->earliest_post_id;
+                }
+            }
 
             while ($continue_fetching) {
                 $endpoint = $this->api->endpoints['search_tweets'];
@@ -1186,14 +1202,10 @@ class TwitterCrawler {
                 $args["count"] = $count_arg;
                 $args["include_entities"] = "true";
 
-                if ($since_id == 0) {
-                    $since_id = $instance_hashtag->last_post_id;
-                }
-                if ($since_id > 0) {
-                    $args["since_id"] = $since_id;
-                }
-                if ($max_id > $since_id) {
-                    $args["max_id"] = $max_id;
+                if  ($capture_old_tweets) { if ($max_id > 0) { $args["max_id"] = bcsub($max_id,1); } } 
+                else{
+                    if ($since_id > 0) { $args["since_id"] = $since_id; }
+                    if (($max_id > $since_id) && ($max_id > 0)) { $args["max_id"] = bcsub($max_id,1); }                    
                 }
 
                 try {
@@ -1209,7 +1221,6 @@ class TwitterCrawler {
                     $tweets = $this->api->parseJSONTweetsFromSearch($payload);
                     foreach ($tweets as $tweet) {
                         $this->logger->logDebug('Processing '.$tweet['post_id'],__METHOD__.','.__LINE__);
-                        $this->logger->logDebug('Processing '.Utils::varDumpToString($tweet),__METHOD__.','.__LINE__);
                         $inserted_post_key = $post_dao->addPost($tweet, $this->user, $this->logger);
                         //We need to check if post exists before add relationship between post and hashtag
                         if ( $post_dao->isPostInDB($tweet['post_id'],'twitter')) {
@@ -1249,44 +1260,48 @@ class TwitterCrawler {
                                 $this->logger->logDebug('URLs have been processed',__METHOD__.','.__LINE__);
                             }
                         }
-                        if ($tweet['post_id'] > $instance_hashtag->last_post_id) {
-                            $instance_hashtag->last_post_id = $tweet['post_id'];
-                        }
-                        if ($instance_hashtag->earliest_post_id == 0
-                        || $tweet['post_id'] < $instance_hashtag->earliest_post_id) {
-                            $instance_hashtag->earliest_post_id = $tweet['post_id'];
-                        }
-                        if ($max_id == 0 || $tweet['post_id'] < $max_id) {
-                            $max_id = $tweet['post_id'];
-                        }
-                        $this->logger->logDebug('Instance hashtag markers updated',__METHOD__.','.__LINE__);
+                        //For each tweet we save max_id if lower
+                        if ($max_id == 0 || $tweet['post_id'] < $max_id) { $max_id = $tweet['post_id']; }
                     }
 
                     //Status message for tweets and users
-                    $status_message = ' ' . count($tweets)." tweet(s) found and $count saved";
-                    $this->logger->logUserSuccess($status_message, __METHOD__.','.__LINE__);
-                    $status_message = ' ' . count($tweets)." tweet(s) found and $user_count users saved";
-                    $this->logger->logUserSuccess($status_message, __METHOD__.','.__LINE__);
-
-                    //Save instance_hashtag important values
-                    if ($instance_hashtag->last_post_id > 0) {
-                        $instance_hashtag_dao->updateLastPostID($instance_hashtag->instance_id,
-                        $instance_hashtag->hashtag_id, $instance_hashtag->last_post_id);
-                    }
-                    if ($instance_hashtag->earliest_post_id > 0) {
-                        $instance_hashtag_dao->updateEarliestPostID($instance_hashtag->instance_id,
-                        $instance_hashtag->hashtag_id, $instance_hashtag->earliest_post_id);
-                    }
-
-                    //Not to continue fetching if search not return the maxim number of tweets
-                    if  (count($tweets) < $count_arg) {
+                    if (count($tweets) > 0 || $count > 0 || $user_count > 0) {
+                        $hashtag_count_cache += $count;
+                        if ($capture_old_tweets && ($hashtag_count_cache >= $this->api->archive_limit) ) {
+                            //We have saved so many old tweets
+                            $capture_old_tweets = false;
+                            $save_last_post_id = true;
+                        }
+                        $status_message = ' ' . count($tweets)." tweet(s) found and $count saved";
+                        $this->logger->logUserSuccess($status_message, __METHOD__.','.__LINE__);
+                        $status_message = ' ' . count($tweets)." tweet(s) found and $user_count users saved";
+                        $this->logger->logUserSuccess($status_message, __METHOD__.','.__LINE__);
+                    } else {       
+                        //Search don't return any tweet, so we finish searching                 
                         $continue_fetching = false;
+                        $capture_old_tweets = false;
+                        $save_last_post_id = true;
                     }
+                    
+                    if ($save_last_post_id) {
+                        //Save last_post_id for searching new tweets next time
+                        $last_post_id = $hashtagpost_dao->getLastPostIDByHashtag($instance_hashtag->hashtag_id);
+                        if ($last_post_id > 0) {
+                            $since_id = $last_post_id;
+                            $instance_hashtag_dao->updateLastPostID($instance_hashtag->instance_id,
+                                    $instance_hashtag->hashtag_id, $last_post_id);
+                        }
+                    }                                       
+                    if ($max_id > 0) {
+                        $instance_hashtag_dao->updateEarliestPostID($instance_hashtag->instance_id,
+                        $instance_hashtag->hashtag_id, $max_id);
+                    }
+
                 } else {
                     $status_message = "Stop fetching tweets. cURL_status = " . $cURL_status;
                     $this->logger->logUserSuccess($status_message, __METHOD__.','.__LINE__);
                     $continue_fetching = false;
-                }
+                }                
             }
         }
     }

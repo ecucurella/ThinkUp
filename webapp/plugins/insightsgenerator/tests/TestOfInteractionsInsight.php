@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * ThinkUp/webapp/plugins/insightsgenerator/tests/TestOfInteractionGraphInsight.php
+ * ThinkUp/webapp/plugins/insightsgenerator/tests/TestOfInteractionsInsight.php
  *
  * Copyright (c) 2013 Nilaksh Das, Gina Trapani
  *
@@ -20,9 +20,9 @@
  * You should have received a copy of the GNU General Public License along with ThinkUp.  If not, see
  * <http://www.gnu.org/licenses/>.
  *
- * Test of InteractionGraphInsight
+ * Test of InteractionsInsight
  *
- * Test for the InteractionGraphInsight class.
+ * Test for the InteractionsInsight class.
  *
  * @license http://www.gnu.org/licenses/gpl.html
  * @copyright 2013 Nilaksh Das, Gina Trapani
@@ -33,9 +33,9 @@ require_once dirname(__FILE__) . '/../../../../tests/init.tests.php';
 require_once THINKUP_WEBAPP_PATH.'_lib/extlib/simpletest/autorun.php';
 require_once THINKUP_WEBAPP_PATH.'_lib/extlib/simpletest/web_tester.php';
 require_once THINKUP_ROOT_PATH. 'webapp/plugins/insightsgenerator/model/class.InsightPluginParent.php';
-require_once THINKUP_ROOT_PATH. 'webapp/plugins/insightsgenerator/insights/interactiongraph.php';
+require_once THINKUP_ROOT_PATH. 'webapp/plugins/insightsgenerator/insights/interactions.php';
 
-class TestOfInteractionGraphInsight extends ThinkUpUnitTestCase {
+class TestOfInteractionsInsight extends ThinkUpUnitTestCase {
 
     public function setUp(){
         parent::setUp();
@@ -45,96 +45,7 @@ class TestOfInteractionGraphInsight extends ThinkUpUnitTestCase {
         parent::tearDown();
     }
 
-    public function testGetHashtagSearchURL() {
-        $insight_plugin = new InteractionGraphInsight();
-
-        $twitter_url = $insight_plugin->getHashtagSearchURL('#testHashtag', 'twitter');
-        $facebook_url = $insight_plugin->getHashtagSearchURL('#testHashtag', 'facebook');
-        $googleplus_url = $insight_plugin->getHashtagSearchURL('#testHashtag', 'google+');
-
-        $this->assertEqual($twitter_url, 'https://twitter.com/search?q=%23testHashtag&src=hash');
-        $this->assertEqual($facebook_url, 'https://www.facebook.com/hashtag/testHashtag');
-        $this->assertEqual($googleplus_url, 'https://plus.google.com/u/0/s/%23testHashtag');
-    }
-
-    public function testInteractionGraphInsightText() {
-        // Get data ready that insight requires
-        $instance = new Instance();
-        $instance->id = 10;
-        $instance->network_username = 'testeriffic';
-        $instance->network = 'twitter';
-
-        $posts = array();
-        $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagOne #hashtagTwo blah",
-            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
-        ));
-        $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagOne @mentionOne blah",
-            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
-        ));
-        $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagThree @mentionOne blah",
-            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
-        ));
-        $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh @mentionOne @mentionTwo blah",
-            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
-        ));
-
-        $insight_plugin = new InteractionGraphInsight();
-        $insight_plugin->generateInsight($instance, $posts, 3);
-
-        // Assert that insight got inserted
-        $insight_dao = new InsightMySQLDAO();
-        $today = date ('Y-m-d');
-        $result = $insight_dao->getInsight("interaction_graph", 10, $today);
-        $this->debug(Utils::varDumpToString($result));
-        $this->assertNotNull($result);
-        $this->assertIsA($result, "Insight");
-        $this->assertPattern('/\@testeriffic talked about /', $result->text);
-        $this->assertPattern('/\#hashtagOne\<\/a\> \<strong\>2 times/', $result->text);
-        $this->assertPattern('/\@mentionOne \<strong\>3 times/', $result->text);
-        $this->assertPattern('/and/', $result->text);
-    }
-
-    public function testInteractionGraphInsightTextHashtagOnly() {
-        // Get data ready that insight requires
-        $instance = new Instance();
-        $instance->id = 10;
-        $instance->network_username = 'testeriffic';
-        $instance->network = 'twitter';
-
-        $posts = array();
-        $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagOne #hashtagTwo blah",
-            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
-        ));
-        $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagOne blah",
-            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
-        ));
-        $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagThree blah",
-            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
-        ));
-
-        $insight_plugin = new InteractionGraphInsight();
-        $insight_plugin->generateInsight($instance, $posts, 3);
-
-        // Assert that insight got inserted
-        $insight_dao = new InsightMySQLDAO();
-        $today = date ('Y-m-d');
-        $result = $insight_dao->getInsight("interaction_graph", 10, $today);
-        $this->debug(Utils::varDumpToString($result));
-        $this->assertNotNull($result);
-        $this->assertIsA($result, "Insight");
-        $this->assertPattern('/\@testeriffic talked about /', $result->text);
-        $this->assertPattern('/\#hashtagOne\<\/a\> \<strong\>2 times/', $result->text);
-        $this->assertNoPattern('/and/', $result->text);
-    }
-
-    public function testInteractionGraphInsightTextMentionOnly() {
+    public function testInteractionsInsightText() {
         // Get data ready that insight requires
         $instance = new Instance();
         $instance->id = 10;
@@ -155,22 +66,21 @@ class TestOfInteractionGraphInsight extends ThinkUpUnitTestCase {
             'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
         ));
 
-        $insight_plugin = new InteractionGraphInsight();
+        $insight_plugin = new InteractionsInsight();
         $insight_plugin->generateInsight($instance, $posts, 3);
 
         // Assert that insight got inserted
         $insight_dao = new InsightMySQLDAO();
         $today = date ('Y-m-d');
-        $result = $insight_dao->getInsight("interaction_graph", 10, $today);
+        $result = $insight_dao->getInsight("interactions", 10, $today);
         $this->debug(Utils::varDumpToString($result));
         $this->assertNotNull($result);
         $this->assertIsA($result, "Insight");
-        $this->assertPattern('/\@testeriffic mentioned /', $result->text);
-        $this->assertPattern('/\@mentionOne \<strong\>2 times/', $result->text);
-        $this->assertNoPattern('/and/', $result->text);
+        $this->assertPattern('/\@testeriffic mentioned \@mentionOne /', $result->text);
+        $this->assertPattern('/\@mentionOne <strong>2 times<\/strong> last week./', $result->text);
     }
 
-    public function testInteractionGraphInsightTextRelatedData() {
+    public function testInteractionsInsightRelatedData() {
         // Get data ready that insight requires
         $instance = new Instance();
         $instance->id = 10;
@@ -179,15 +89,15 @@ class TestOfInteractionGraphInsight extends ThinkUpUnitTestCase {
 
         $posts = array();
         $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagOne #hashtagTwo @mentionOne blah",
+            'post_text' => "Blah blah bleh @mentionOne @mentionTwo blah",
             'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
         ));
         $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagOne @mentionTwo blah",
+            'post_text' => "Blah blah bleh @mentionTwo blah",
             'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
         ));
         $posts[] = new Post(array(
-            'post_text' => "Blah blah bleh #hashtagThree @mentionOne blah",
+            'post_text' => "Blah blah bleh @mentionOne blah",
             'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
         ));
         $posts[] = new Post(array(
@@ -195,24 +105,104 @@ class TestOfInteractionGraphInsight extends ThinkUpUnitTestCase {
             'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
         ));
 
-        $insight_plugin = new InteractionGraphInsight();
+        $insight_plugin = new InteractionsInsight();
         $insight_plugin->generateInsight($instance, $posts, 3);
 
         // Assert that insight got inserted
         $insight_dao = new InsightMySQLDAO();
         $today = date ('Y-m-d');
-        $result = $insight_dao->getInsight("interaction_graph", 10, $today);
+        $result = $insight_dao->getInsight("interactions", 10, $today);
         $this->debug(Utils::varDumpToString($result));
         $this->assertNotNull($result);
         $this->assertIsA($result, "Insight");
         $dataset = unserialize($result->related_data);
-        $this->assertEqual($dataset['hashtags'][0]['hashtag'], '#hashtagOne');
-        $this->assertEqual($dataset['hashtags'][0]['count'], 2);
-        $this->assertEqual($dataset['hashtags'][0]['url'], 'https://twitter.com/search?q=%23hashtagOne&src=hash');
-        $this->assertEqual($dataset['hashtags'][0]['related_mentions'][0], '@mentionOne');
-        $this->assertEqual($dataset['hashtags'][0]['related_mentions'][1], '@mentionTwo');
-        $this->assertEqual($dataset['mentions'][0]['mention'], '@mentionOne');
-        $this->assertEqual($dataset['mentions'][0]['count'], 3);
+        $this->assertEqual($dataset[0]['mention'], '@mentionOne');
+        $this->assertEqual($dataset[0]['count'], 3);
+        $this->assertEqual($dataset[1]['mention'], '@mentionTwo');
+        $this->assertEqual($dataset[1]['count'], 2);
+    }
+
+    public function testInteractionsInsightTextWithMetweets() {
+        // Get data ready that insight requires
+        $instance = new Instance();
+        $instance->id = 10;
+        $instance->network_username = 'testeriffic';
+        $instance->network = 'twitter';
+
+        $posts = array();
+        $posts[] = new Post(array(
+            'post_text' => "Blah blah bleh @mentionOne @testeriffic blah",
+            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
+        ));
+        $posts[] = new Post(array(
+            'post_text' => "Blah blah bleh @mentionOne blah @testeriffic",
+            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
+        ));
+        $posts[] = new Post(array(
+            'post_text' => "Blah blah bleh @testeriffic blah",
+            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
+        ));
+
+        $insight_plugin = new InteractionsInsight();
+        $insight_plugin->generateInsight($instance, $posts, 3);
+
+        // Assert that insight got inserted
+        $insight_dao = new InsightMySQLDAO();
+        $today = date ('Y-m-d');
+        $result = $insight_dao->getInsight("interactions", 10, $today);
+        $this->debug(Utils::varDumpToString($result));
+        $this->assertNotNull($result);
+        $this->assertIsA($result, "Insight");
+        $this->assertPattern('/\@testeriffic mentioned /', $result->text);
+        $this->assertPattern('/\@mentionOne <strong>2 times/', $result->text);
+    }
+
+    public function testInteractionsInsightMentionCasesIgnored() {
+        // Get data ready that insight requires
+        $instance = new Instance();
+        $instance->id = 10;
+        $instance->network_username = 'testeriffic';
+        $instance->network = 'twitter';
+
+        $builders = array();
+        $builders[] = FixtureBuilder::build('users', array('user_id'=>'7612345', 'user_name'=>'TwitterTestUser',
+        'full_name'=>'Twitter Test User', 'avatar'=>'avatar.jpg', 'follower_count'=>36000, 'is_protected'=>0,
+        'network'=>'twitter', 'description'=>'A test Twitter user'));
+
+        $posts = array();
+        $posts[] = new Post(array(
+            'post_text' => "Blah blah bleh @TwitterTestUser blah",
+            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
+        ));
+        $posts[] = new Post(array(
+            'post_text' => "Blah blah bleh @Twittertestuser blah blah",
+            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
+        ));
+        $posts[] = new Post(array(
+            'post_text' => "Blah blah @twitterTestUser blah",
+            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
+        ));
+        $posts[] = new Post(array(
+            'post_text' => "Blah blah @tWiTTerTeSTusEr blah bleh",
+            'pub_date' => date("Y-m-d H:i:s",strtotime('-2 days')),
+        ));
+
+        $insight_plugin = new InteractionsInsight();
+        $insight_plugin->generateInsight($instance, $posts, 3);
+
+        // Assert that insight got inserted
+        $insight_dao = new InsightMySQLDAO();
+        $today = date ('Y-m-d');
+        $result = $insight_dao->getInsight("interactions", 10, $today);
+        $this->debug(Utils::varDumpToString($result));
+        $this->assertNotNull($result);
+        $dataset = unserialize($result->related_data);
+        $this->assertIsA($result, "Insight");
+        $this->assertPattern('/\@testeriffic mentioned /', $result->text);
+        $this->assertPattern('/\@TwitterTestUser <strong>4 times/', $result->text);
+        $this->assertEqual($dataset[0]['mention'], '@TwitterTestUser');
+        $this->assertEqual($dataset[0]['count'], 4);
+        $this->assertEqual($dataset[0]['user']->full_name, "Twitter Test User");
     }
 
     public function testInteractionGraphInsightTextWithMetweets() {
