@@ -133,7 +133,6 @@ class InsightTerms {
     }
 
     /**
->>>>>>> origin/check_saved_searches
      * Get the localized noun for the term 'post'.
      * @param str $network network whose localization has to be followed
      * @param bool $plural whether the term to be returned is plural or not
@@ -357,5 +356,4 @@ class InsightTerms {
             return round($number,2).'x';
         }
     }
->>>>>>> origin/check_saved_searches
 }
