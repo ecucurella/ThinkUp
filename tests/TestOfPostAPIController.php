@@ -3007,5 +3007,304 @@ class TestOfPostAPIController extends ThinkUpUnitTestCase {
         }
         $installer_dao = DAOFactory::getDAO('InstallerDAO');
         $this->assertTrue(array_search($prefix . "posts", $installer_dao->getTables()) !== false);
+    }        
+    
+    private function buildDataFollowers() {
+        $builders = array();
+
+        //add users               
+        for ($i = 1; $i <= 50; $i++) {
+            $user_twitter_id = 200 + $i;
+            $user_facebook_id = 300 + $i;
+            $user_name_twitter = 'user_name_twitter_'.$user_twitter_id;
+            $user_name_facebook_page = 'user_name_facebook_page_'.$user_facebook_id;
+            $count_twitter = 200 - $i;
+            $count_facebook_page = 300 + $i;
+    
+            $builders[] = FixtureBuilder::build( 'users', array(
+                    'user_id' => $user_twitter_id,
+                    'user_name' => $user_name_twitter,
+                    'full_name' => $user_name_twitter,
+                    'network' => 'twitter'));
+    
+            $builders[] = FixtureBuilder::build( 'users', array(
+                    'user_id' => $user_facebook_id,
+                    'user_name' => $user_name_facebook_page,
+                    'full_name' => $user_name_facebook_page,
+                    'network' => 'facebook page'));
+    
+            $builders[] = FixtureBuilder::build( 'count_history', array(
+                    'network_user_id' => $user_twitter_id,
+                    'network' => 'twitter',
+                    'type' => 'followers',
+                    'date' => '2013-10-11',
+                    'count' => $count_twitter));
+    
+            $builders[] = FixtureBuilder::build( 'count_history', array(
+                    'network_user_id' => $user_facebook_id,
+                    'network' => 'facebook page',
+                    'type' => 'followers',
+                    'date' => '2013-10-11',
+                    'count' => $count_facebook_page));            
+        }
+
+        //Today
+        for ($i = 1; $i <= 5; $i++) {
+            $user_twitter_id = 200 + $i;    
+            $user_facebook_id = 300 + $i;
+            $builders[] = FixtureBuilder::build( 'count_history', array(
+                    'network_user_id' => $user_twitter_id,
+                    'network' => 'twitter',
+                    'type' => 'followers',
+                    'date' => date_format(new DateTime('NOW'),'Y-m-d'),
+                    'count' => 666));
+            
+            $builders[] = FixtureBuilder::build( 'count_history', array(
+                    'network_user_id' => $user_facebook_id,
+                    'network' => 'facebook page',
+                    'type' => 'followers',
+                    'date' => date_format(new DateTime('NOW'),'Y-m-d'),
+                    'count' => 999));
+        }
+        
+        return $builders;        
+    }
+    
+    public function testFollowersNoParameters() {
+        //BuildData
+        $builder = $this->buildDataFollowers();
+        //Test no parameters => Today + Twitter + No limit
+        $_GET['type'] = 'followers';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->assertEqual(sizeof($output), 5);
+        $index1 = 201;
+        foreach($output as $follower) {
+            $this->assertTrue($follower instanceof stdClass);
+            $this->assertEqual($follower->user_id, $index1);
+            $this->assertEqual($follower->user_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->full_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->network, 'twitter');
+            $this->assertEqual($follower->date, date_format(new DateTime('NOW'),'Y-m-d'));
+            $this->assertEqual($follower->followers, 666);
+            $index1 += 1;
+        }               
+    }
+    
+    public function testFollowersOnlyLimit() {
+        //BuildData
+        $builder = $this->buildDataFollowers();
+        //Test only limit=1 => Today + Twitter + limit =1
+        $_GET['type'] = 'followers';
+        $_GET['limit'] = '1';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->debug(Utils::varDumpToString($output));
+        $this->assertEqual(sizeof($output), 1);
+        $this->assertEqual($output[0]->user_id, 201);
+        $this->assertEqual($output[0]->user_name, 'user_name_twitter_201');
+        $this->assertEqual($output[0]->full_name, 'user_name_twitter_201');
+        $this->assertEqual($output[0]->network, 'twitter');
+        $this->assertEqual($output[0]->date, date_format(new DateTime('NOW'),'Y-m-d'));
+        $this->assertEqual($output[0]->followers, 666);       
+    }
+
+    public function testFollowersOnlyNetwork() {    
+        //BuildData
+        $builder = $this->buildDataFollowers();
+
+        //Test only network=facebook page => Today + Facebook Page + No limit
+        $_GET['type'] = 'followers';
+        $_GET['network'] = 'facebook page';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->assertEqual(sizeof($output), 5);
+        $index1 = 301;
+        foreach($output as $follower) {
+            $this->assertTrue($follower instanceof stdClass);
+            $this->assertEqual($follower->user_id, $index1);
+            $this->assertEqual($follower->user_name, 'user_name_facebook_page_'.$index1);
+            $this->assertEqual($follower->full_name, 'user_name_facebook_page_'.$index1);
+            $this->assertEqual($follower->network, 'facebook page');
+            $this->assertEqual($follower->date, date_format(new DateTime('NOW'),'Y-m-d'));
+            $this->assertEqual($follower->followers, 999);
+            $index1+=1;
+        }    
+    }
+
+    public function testFollowersOnlyDate() {    
+        //BuildData
+        $builder = $this->buildDataFollowers();
+                   
+        //Test only date=2013-10-11 => 2013-10-11 + Twitter + No limit
+        $_GET['type'] = 'followers';
+        $_GET['date'] = '2013-10-11';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->assertEqual(sizeof($output), 50);
+    
+        //From 201 to 250
+        $index1 = 201;
+        $index2 = 199;
+        $this->assertTrue(is_array($output));
+        foreach($output as $follower) {
+            $this->assertTrue($follower instanceof stdClass);
+            $this->assertEqual($follower->user_id, $index1);
+            $this->assertEqual($follower->user_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->full_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->network, 'twitter');
+            $this->assertEqual($follower->date, '2013-10-11');
+            $this->assertEqual($follower->followers, $index2);
+            $index1+=1;
+            $index2-=1;
+        }        
+    }
+
+    public function testFollowersDateNotValid() {    
+        //BuildData
+        $builder = $this->buildDataFollowers();
+
+        //Test date not valid
+        $_GET['type'] = 'followers';
+        $_GET['date'] = '2013-13-11'; //month from 1-12
+        $_GET['network'] = 'twitter';
+        $_GET['limit'] = '50';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->assertEqual(sizeof($output), 1);
+        $message = 'A request of type followers requires valid format date value (yyyy-mm-dd) !!';
+        $this->assertEqual($message,$output->error->message);    
+    }    
+    
+    public function testFollowersSQLInjection() {    
+        //BuildData
+        $builder = $this->buildDataFollowers();
+
+        //Test limit SQL injection
+        $_GET['type'] = 'followers';
+        $_GET['date'] = '2013-10-11';
+        $_GET['network'] = 'twitter';
+        $_GET['limit'] = ';DROP TABLE tu_count_history;';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->assertEqual(sizeof($output), 50);
+        
+        //From 201 to 250
+        $index1 = 201;
+        $index2 = 199;
+        $this->assertTrue(is_array($output));
+        foreach($output as $follower) {
+            $this->assertTrue($follower instanceof stdClass);
+            $this->assertEqual($follower->user_id, $index1);
+            $this->assertEqual($follower->user_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->full_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->network, 'twitter');
+            $this->assertEqual($follower->date, '2013-10-11');
+            $this->assertEqual($follower->followers, $index2);
+            $index1+=1;
+            $index2-=1;
+        }        
+    }
+
+    public function testFollowersLimitEmpty() {    
+        //BuildData
+        $builder = $this->buildDataFollowers();
+    
+        //Test limit empty
+        $_GET['type'] = 'followers';
+        $_GET['date'] = '2013-10-11';
+        $_GET['network'] = 'twitter';
+        $_GET['limit'] = '';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->assertEqual(sizeof($output), 50);        
+        
+        //From 201 to 250
+        $index1 = 201;
+        $index2 = 199;
+        $this->assertTrue(is_array($output));
+        foreach($output as $follower) {
+            $this->assertTrue($follower instanceof stdClass);
+            $this->assertEqual($follower->user_id, $index1);
+            $this->assertEqual($follower->user_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->full_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->network, 'twitter');
+            $this->assertEqual($follower->date, '2013-10-11');
+            $this->assertEqual($follower->followers, $index2);
+            $index1+=1;
+            $index2-=1;
+        }    
+    }
+
+    public function testFollowersTwitter() {    
+        //BuildData
+        $builder = $this->buildDataFollowers();
+    
+        //Test twitter
+        $_GET['type'] = 'followers';
+        $_GET['date'] = '2013-10-11';
+        $_GET['network'] = 'twitter';
+        $_GET['limit'] = '50';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->assertEqual(sizeof($output), 50);
+    
+        //From 201 to 250
+        $index1 = 201;
+        $index2 = 199;
+        $this->assertTrue(is_array($output));
+        foreach($output as $follower) {
+            $this->assertTrue($follower instanceof stdClass);
+            $this->assertEqual($follower->user_id, $index1);
+            $this->assertEqual($follower->user_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->full_name, 'user_name_twitter_'.$index1);
+            $this->assertEqual($follower->network, 'twitter');
+            $this->assertEqual($follower->date, '2013-10-11');
+            $this->assertEqual($follower->followers, $index2);
+            $index1+=1;
+            $index2-=1;
+        }
+    }    
+    
+    public function testFollowersFacebookPage() {
+        //BuildData
+        $builder = $this->buildDataFollowers();
+    
+        //Test facebook pages
+        $_GET['type'] = 'followers';
+        $_GET['date'] = '2013-10-11';
+        $_GET['network'] = 'facebook page';
+        $_GET['limit'] = '50';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());
+        $this->assertEqual(sizeof($output), 50);
+    
+        //From 350 to 301
+        $index1 = 350;
+        $this->assertTrue(is_array($output));
+        foreach($output as $follower) {
+            $this->assertTrue($follower instanceof stdClass);
+            $this->assertEqual($follower->user_id, $index1);
+            $this->assertEqual($follower->user_name, 'user_name_facebook_page_'.$index1);
+            $this->assertEqual($follower->full_name, 'user_name_facebook_page_'.$index1);
+            $this->assertEqual($follower->network, 'facebook page');
+            $this->assertEqual($follower->date, '2013-10-11');
+            $this->assertEqual($follower->followers, $index1);
+            $index1-=1;
+        }    
+    }
+
+    public function testFollowersNoUsers() {
+        //BuildData
+        $builder = $this->buildDataFollowers();
+    
+        //Test another with no users
+        $_GET['type'] = 'followers';
+        $_GET['date'] = '2013-10-11';
+        $_GET['network'] = 'facebook';
+        $_GET['limit'] = '50';
+        $controller = new PostAPIController();
+        $output = json_decode($controller->go());;
+        $this->assertEqual(sizeof($output), 0);
     }    
 }
