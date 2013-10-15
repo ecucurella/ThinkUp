@@ -118,7 +118,19 @@ class PostAPIController extends ThinkUpController {
      * The keyword to use. No default value. In requests that require hashtag data must be set.
      * @var str
      */
-    public $keyword;    
+    public $keyword;   
+    /**
+     * The date to retrieve users followers
+     * @var date
+     * 
+     */
+    public $date; 
+    /**
+     * The number maximum if users follower to get. Default is no limit.
+     * @var int
+     *
+     */
+    public $limit;
     /**
      * A User object set when either the user_id or username variables are set. If you are using User data at any point
      * in this class, you should use this object.
@@ -218,7 +230,12 @@ class PostAPIController extends ThinkUpController {
         if (isset($_GET['keyword'])) {
             $this->keyword = $_GET['keyword'];
         }
-        
+        if (isset($_GET['date'])) {
+            $this->date = $_GET['date'];
+        }
+        if (isset($_GET['limit'])) {
+            $this->limit = $_GET['limit'];
+        }                
         /*
          * END READ IN OF QUERY STRING VARS
          */
@@ -346,7 +363,8 @@ class PostAPIController extends ThinkUpController {
                 }
             }
         } else { //post-related API call
-            if ($this->network == "facebook") {
+            //Not for Type = 'followers'
+            if ($this->network == "facebook" && $this->type <> 'followers') {
                 //assume all Facebook posts are private
                 throw new PostNotFoundException();
             }
@@ -646,6 +664,29 @@ class PostAPIController extends ThinkUpController {
                             $this->count, $this->order_by, $this->direction, $this->page, $this->is_public);
                 }
                 break;
+            
+                /*
+                 *  Gets users with followers in a date for a network
+                 *  
+                 *  Optional arguments: date, network, limit
+                 *  
+                 *  Docs: http://thinkup.com/docs/userguide/api/posts/followers.html
+                 *  
+                 */
+            case 'followers':
+                $this->network = (is_null($this->network)) ? 'twitter' : $this->network;
+                $this->date = (!isset($this->date) || is_null($this->date) ) ? 
+                    date_format(new DateTime('NOW'),'Y-m-d') : $this->date;
+                //check date is ok, ex: 2013-10-11
+                if (strlen($this->date) == 10 && 
+                        checkdate(substr($this->date,5,2),substr($this->date,8,2),substr($this->date,0,4))) {
+                    $data = $this->user_dao->getFollowers($this->date, $this->network,$this->limit);
+                }
+                else {
+                    $m = 'A request of type ' . $this->type . ' requires valid format date value (yyyy-mm-dd) !!';
+                    throw new APIErrorException($m);
+                }
+                break;
 
                 /*
                  * Generate an error because the API call type was not recognized.
@@ -663,12 +704,15 @@ class PostAPIController extends ThinkUpController {
 
         switch ($this->network) {
             case 'twitter':
-                if (is_array($data)) {
-                    foreach ($data as $key => $post) {
-                        $data[$key] = $this->convertPostToTweet($post);
+                //In type = 'followers' any change is needed'
+                if ($this->type <> 'followers') {
+                    if (is_array($data)) {
+                        foreach ($data as $key => $post) {
+                            $data[$key] = $this->convertPostToTweet($post);
+                        }
+                    } else {
+                        $data = $this->convertPostToTweet($data);
                     }
-                } else {
-                    $data = $this->convertPostToTweet($data);
                 }
                 break;
 
