@@ -50,4 +50,7 @@ Refer to each API method's definition below to see its parameters and example re
    user_replies_in_range
    keyword_posts
    followers
+   instances_posts
+   instances_hashtags
+   
    
