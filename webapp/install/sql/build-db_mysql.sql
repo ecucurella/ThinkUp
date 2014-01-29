@@ -22,7 +22,6 @@ CREATE TABLE tu_count_history (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Item counts by date on a network.';
 
 --
->>>>>>> origin/twitter-configure-and-crawl-public-accounts-rc
 -- Table structure for table tu_encoded_locations
 --
 
