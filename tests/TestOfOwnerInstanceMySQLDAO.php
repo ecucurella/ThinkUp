@@ -92,6 +92,16 @@ class TestOfOwnerInstanceMySQLDAO extends ThinkUpUnitTestCase {
         $this->assertEqual(sizeof($owner_instances), 3);
     }
 
+    public function testGetByOwner() {
+        $dao = new OwnerInstanceMySQLDAO();
+        $builder1 = FixtureBuilder::build(self::TEST_TABLE_OI, array('instance_id' => 20, 'owner_id'=>50) );
+        $builder2 = FixtureBuilder::build(self::TEST_TABLE_OI, array('instance_id' => 20, 'owner_id'=>51) );
+        $builder3 = FixtureBuilder::build(self::TEST_TABLE_OI, array('instance_id' => 20, 'owner_id'=>52) );
+        $owner_instances = $dao->getByOwner(50);
+        $this->assertIsA($owner_instances, 'Array');
+        $this->assertEqual(sizeof($owner_instances), 1);
+    }
+
     public function testInsertOwnerInstance() {
         $dao = new OwnerInstanceMySQLDAO();
         $result = $dao->insert(10, 20, 'aaa', 'bbb');
@@ -102,7 +112,17 @@ class TestOfOwnerInstanceMySQLDAO extends ThinkUpUnitTestCase {
         $this->assertEqual(20, $data['instance_id'], 'we have an instance_id of: 20');
         $this->assertEqual('aaa', $data['oauth_access_token'], 'we have an oauth_access_token of: aaa');
         $this->assertEqual('bbb', $data['oauth_access_token_secret'], 'we have an oauth_access_token_secret of: bbb');
+        $this->assertFalse($data['is_twitter_referenced_instance']);        
         $this->assertFalse( $stmt->fetch(), 'we have only one record' );
+    }
+
+    public function testInsertOwnerInstanceTwitterReferencedInstance() {
+        $dao = new OwnerInstanceMySQLDAO();
+        $result = $dao->insert(10, 20, 'aaa', 'bbb', true);
+        $this->assertTrue($result);
+        $stmt = OwnerInstanceMySQLDAO::$PDO->query( "select is_twitter_referenced_instance from " . $this->table_prefix . 'owner_instances' );
+        $data = $stmt->fetch();
+        $this->assertTrue($data['is_twitter_referenced_instance']);        
     }
 
     public function testGetOAuthTokens() {
@@ -142,6 +162,7 @@ class TestOfOwnerInstanceMySQLDAO extends ThinkUpUnitTestCase {
         'valid oauth_access_token');
         $this->assertEqual($owner_instance->oauth_access_token_secret, $columns['oauth_access_token_secret'],
         'valid oauth_access_token_secret');
+        $this->assertFalse($owner_instance->is_twitter_referenced_instance);
     }
 
 
@@ -310,5 +331,21 @@ class TestOfOwnerInstanceMySQLDAO extends ThinkUpUnitTestCase {
         $owner_instance = $dao->get(50, 20);
         $this->assertIsA($owner_instance, 'OwnerInstance');
         $this->assertEqual($owner_instance->auth_error, '');
+    }
+
+    public function testGetIsTwitterReferencedInstance() {
+
+        $builder[] = FixtureBuilder::build(self::TEST_TABLE_OI, array('instance_id' => 20, 'owner_id'=>50,
+        'auth_error'=>'', 'is_twitter_referenced_instance'=>0) );
+
+        $builder[] = FixtureBuilder::build(self::TEST_TABLE_OI, array('instance_id' => 21, 'owner_id'=>50,
+        'auth_error'=>'', 'is_twitter_referenced_instance'=>1) );
+
+        $dao = new OwnerInstanceMySQLDAO();
+
+        $this->assertFalse($dao->getIsTwitterReferencedInstance(50, 20));
+        $this->assertTrue($dao->getIsTwitterReferencedInstance(50, 21));
+        $this->assertFalse($dao->getIsTwitterReferencedInstance(50, 22));
+
     }
 }

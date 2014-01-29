@@ -263,4 +263,5 @@ interface InstanceDAO {
      * @return array Instances with number of posts saved with a hashtag in system between dates
      */
     public function getInstancesHashtags($start_date, $end_date, $network, $limit);
+
 }

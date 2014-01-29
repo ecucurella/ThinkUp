@@ -175,6 +175,7 @@ class PostAPIController extends ThinkUpController {
      * @var InstanceDAO
      */
     private $instance_dao;
+
     /**
      * Constructor
      *
@@ -247,6 +248,7 @@ class PostAPIController extends ThinkUpController {
         if (isset($_GET['keyword'])) {
             $this->keyword = $_GET['keyword'];
         }
+
         if (isset($_GET['date'])) {
             $this->date = $_GET['date'];
         }
@@ -259,6 +261,7 @@ class PostAPIController extends ThinkUpController {
         if (isset($_GET['end_date'])) {
             $this->end_date = $_GET['end_date'];
         }               
+
         /*
          * END READ IN OF QUERY STRING VARS
          */
@@ -353,7 +356,7 @@ class PostAPIController extends ThinkUpController {
         } else {
             $this->user = null;
         }
-        
+
        /*
         * Use the information gathered from the query string to retrieve a
         * Hashtag object. This will be the standard object with which to get
@@ -364,7 +367,7 @@ class PostAPIController extends ThinkUpController {
         } else {
             $this->hashtag = null;
         }
-        
+
         //Privacy checks
         if (substr($this->type, 0, 4)=='user') { //user-related API call
             if (is_null($this->user)) {
@@ -673,7 +676,7 @@ class PostAPIController extends ThinkUpController {
                 $data = $this->post_dao->getAllRepliesInRange($this->user->user_id, $this->network, $this->count,
                 $this->from, $this->until, $this->page, $this->order_by, $this->direction, $this->is_public);
                 break;
-                
+
                 /*
                  * Gets posts that contains a Keyword.
                 *
@@ -889,7 +892,6 @@ class PostAPIController extends ThinkUpController {
         $post->thinkup->is_geo_encoded = $post->is_geo_encoded;
 
         $user = $this->user_dao->getUserByName($post->author_username, $post->network);
-
         /*
          * Occasionally you run into users you haven't fetched yet. Bypass this code if you find one of them.
          */

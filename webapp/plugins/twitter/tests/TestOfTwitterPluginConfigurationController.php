@@ -50,7 +50,7 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
 
         //Add owner
         $builders[] = FixtureBuilder::build('owners', array('id'=>1, 'full_name'=>'ThinkUp J. User',
-        'email'=>'me@example.com', 'is_activated'=>1, 'pwd'=>'XXX', 'activation_code'=>8888));
+        'email'=>'me@example.com', 'is_activated'=>1, 'pwd'=>'XXX', 'activation_code'=>8888, 'membership_level'=>null));
 
         //Add instance_owner
         $builders[] = FixtureBuilder::build('owner_instances', array('owner_id'=>1, 'instance_id'=>1));
@@ -98,7 +98,7 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
      */
     public function testOutputNoParams() {
         // build some options data
-        $options_arry = $this->buildPluginOptions();
+        $options_array = $this->buildPluginOptions();
 
         //not logged in, no owner set
         $controller = new TwitterPluginConfigurationController(null, 'twitter');
@@ -124,7 +124,7 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
      */
     public function testConfigOptionsNotAdmin() {
         // build some options data
-        $options_arry = $this->buildPluginOptions();
+        $options_array = $this->buildPluginOptions();
         $this->simulateLogin('me@example.com');
         $owner_dao = DAOFactory::getDAO('OwnerDAO');
         $owner = $owner_dao->getByEmail(Session::getLoggedInUser());
@@ -146,7 +146,7 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
     public function testConfigOptionsIsAdmin() {
         $_SERVER['SERVER_NAME'] = 'mytestthinkup';
         // build some options data
-        $options_arry = $this->buildPluginOptions();
+        $options_array = $this->buildPluginOptions();
         $this->simulateLogin('me@example.com', true);
         $owner_dao = DAOFactory::getDAO('OwnerDAO');
         $owner = $owner_dao->getByEmail(Session::getLoggedInUser());
@@ -171,7 +171,7 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
         $_SERVER['HTTPS'] = true;
         $_SERVER['SERVER_NAME'] = 'mytestthinkup';
         // build some options data
-        $options_arry = $this->buildPluginOptions();
+        $options_array = $this->buildPluginOptions();
         $this->simulateLogin('me@example.com', true);
         $owner_dao = DAOFactory::getDAO('OwnerDAO');
         $owner = $owner_dao->getByEmail(Session::getLoggedInUser());
@@ -190,7 +190,7 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
         $_SERVER['HTTPS'] = null;
         $_SERVER['SERVER_NAME'] = 'localhost';
         // build some options data
-        $options_arry = $this->buildPluginOptions();
+        $options_array = $this->buildPluginOptions();
         $this->simulateLogin('me@example.com', true);
         $owner_dao = DAOFactory::getDAO('OwnerDAO');
         $owner = $owner_dao->getByEmail(Session::getLoggedInUser());
@@ -238,7 +238,7 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
     public function testForDeleteCSRFToken() {
         $_SERVER['SERVER_NAME'] = 'mytestthinkup';
         // build some options data
-        $options_arry = $this->buildPluginOptions();
+        $options_array = $this->buildPluginOptions();
         $this->simulateLogin('me@example.com', true, true);
         $owner_dao = DAOFactory::getDAO('OwnerDAO');
         $owner = $owner_dao->getByEmail(Session::getLoggedInUser());
@@ -300,7 +300,9 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
         $plugn_opt_builder3 = FixtureBuilder::build('options', array('namespace'=>$namespace,
         'option_name'=>'num_twitter_errors', 'option_value'=>'5'));
 
-        $controller = new TwitterPluginConfigurationController(null, 'twitter');
+        $owner = new Owner(array('id'=>1, 'email'=>'me@example.com'));
+
+        $controller = new TwitterPluginConfigurationController($owner, 'twitter');
         $this->debug('Controller has been instantiated');
         $results = $controller->go();
 
@@ -331,7 +333,9 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
         //Add instance_owner
         $builders[] = FixtureBuilder::build('owner_instances', array('owner_id'=>1, 'instance_id'=>2));
 
-        $controller = new TwitterPluginConfigurationController(null, 'twitter');
+        $owner = new Owner(array('id'=>1, 'email'=>'me@example.com'));
+
+        $controller = new TwitterPluginConfigurationController($owner, 'twitter');
         $results = $controller->go();
 
         $v_mgr = $controller->getViewManager();
@@ -340,5 +344,232 @@ class TestOfTwitterPluginConfigurationController extends ThinkUpUnitTestCase {
         $this->assertEqual('ginatrapani on Twitter is already set up in ThinkUp! To add a different Twitter account, '.
         'log out of Twitter.com in your browser and authorize ThinkUp again.', $msgs['user_add']);
         $this->assertEqual('', $v_mgr->getTemplateDataItem('error_msg'));
+    }
+
+    public function testOwnerMemberLevelWithAccountConnected() {
+        // build options data
+        $options_array = $this->buildPluginOptions();
+        //Add a connected Twitter account
+        $builders[] = FixtureBuilder::build('instances', array('id'=>2, 'network_user_id'=>14,
+        'network_username'=>'biz', 'is_public'=>1, 'network'=>'twitter'));
+        $builders[] = FixtureBuilder::build('owner_instances', array('owner_id'=>1, 'instance_id'=>2));
+
+        $this->simulateLogin('me@example.com');
+        $owner_dao = DAOFactory::getDAO('OwnerDAO');
+        $owner = $owner_dao->getByEmail(Session::getLoggedInUser());
+        //Set membership_level to Member
+        $owner->membership_level = "Member";
+
+        $controller = new TwitterPluginConfigurationController($owner, 'twitter');
+        $output = $controller->go();
+        $this->debug($output);
+
+        // Assert that the Add User button isn't there
+        $this->assertNoPattern('/Add a Twitter Account/', $output);
+        // Assert that the message about upgradiing is there
+        $this->assertPattern('/To connect another Twitter account to ThinkUp, upgrade your membership/', $output);
+    }
+
+    public function testOwnerProLevelWith9AccountsConnected() {
+        // build options data
+        $options_array = $this->buildPluginOptions();
+        //Add 9 connected Twitter accounts
+        $i = 9;
+        while ($i > 0) {
+            $builders[] = FixtureBuilder::build('instances', array('id'=>(1+$i), 'network_user_id'=>14,
+            'network_username'=>'biz', 'is_public'=>1, 'network'=>'twitter'));
+            $builders[] = FixtureBuilder::build('owner_instances', array('owner_id'=>1, 'instance_id'=>(1+$i)));
+            $i--;
+        }
+
+        $this->simulateLogin('me@example.com');
+        $owner_dao = DAOFactory::getDAO('OwnerDAO');
+        $owner = $owner_dao->getByEmail(Session::getLoggedInUser());
+        //Set membership_level to Member
+        $owner->membership_level = "Pro";
+
+        $controller = new TwitterPluginConfigurationController($owner, 'twitter');
+        $output = $controller->go();
+        $this->debug($output);
+
+        // Assert that the Add User button isn't there
+        $this->assertNoPattern('/Add a Twitter Account/', $output);
+        // Assert that the message about the membership cap is there
+        $this->assertPattern('/You&#39;ve connected 10 of 10 accounts to ThinkUp./', $output);
+    }
+
+    public function buildDataAddPublicAccount() {
+
+        $builders = array();
+
+        //Add admin owner
+        $builders[] = FixtureBuilder::build('owners', array(
+            'id'=>2, 
+            'full_name'=>'Admin',
+            'email'=>'admin@example.com', 
+            'is_activated'=>1, 
+            'is_admin'=>1
+        ));
+
+        //Add instance_owner
+        $builders[] = FixtureBuilder::build('owner_instances', array(
+            'owner_id'=>2, 
+            'instance_id'=>2,
+            'oauth_access_token'=>'xxx',
+            'oauth_access_token_secret'=>'zzz',
+            'auth_error'=>'',
+            'is_twitter_referenced_instance'=>0
+        ));
+
+        //Add instance
+        $builders[] = FixtureBuilder::build('instances', array(
+            'id'=>2, 
+            'network_user_id'=>131,
+            'network_username'=>'ecucurella', 
+            'is_public'=>1
+        ));
+
+        return $builders;
+    }
+
+    public function testAddPublicAccountAsAdmin() {
+        $this->debug(__METHOD__);
+        
+        // build options and data
+        $options_array = $this->buildPluginOptions();
+        $builders = $this->buildDataAddPublicAccount();
+
+        //Admin: should add a public account
+        $_POST['action'] = "add account";
+        $_POST['instance_id'] = 2;
+        $_POST['owner_id'] = 2;
+        $_POST['screen_name'] = 'tv3cat';
+
+        $owner_dao = DAOFactory::getDAO('OwnerDAO');
+        $this->simulateLogin('admin@example.com', true, true);
+        $owner = $owner_dao->getByEmail(Session::getLoggedInUser());        
+        $controller = new TwitterPluginConfigurationController($owner, 'twitter');
+
+        //before Instance, Instance Twitter, Owner instance not exist     
+        $instance_dao = new InstanceMySQLDAO();
+        $owner_instance_dao = new OwnerInstanceMySQLDAO();
+
+        $instance = $instance_dao->getByUsername('ecucurella','twitter');
+        $this->assertNotNull($instance);
+
+        $instance = $instance_dao->getByUsername('tv3cat','twitter');
+        $this->assertNull($instance);
+
+        $owner_instances = $owner_instance_dao->getByOwner($owner->id);
+        $this->assertIsA($owner_instances, 'Array');
+        $this->assertEqual(sizeof($owner_instances),1);
+
+        //process controller
+        $controller->go();
+
+        //instance should exist
+        $instance = $instance_dao->getByUsername('tv3cat','twitter');
+        $this->assertNotNull($instance);
+
+        //owner_instances should exist
+        $owner_instances = $owner_instance_dao->getByOwner($owner->id);
+        $this->assertIsA($owner_instances, 'Array');
+        $this->assertEqual(sizeof($owner_instances), 2);
+
+        //instances_twitter should exist
+        $stmt = InstanceMySQLDAO::$PDO->query("SELECT * FROM ".$this->table_prefix."instances_twitter WHERE id = ".$instance->id);
+        $data = $stmt->fetch();
+        $this->assertTrue($data);
+
+        $v_mgr = $controller->getViewManager();
+        $success_msgs = $v_mgr->getTemplateDataItem('success_msgs');
+        $this->assertNotNull($success_msgs);
+        $this->assertEqual($success_msgs['add_public_account'], 'Public account tv3cat added !!');
+        $this->assertNull($v_mgr->getTemplateDataItem('error_msg'));
+    }
+
+        public function testAddPublicAccountAsAdminOwnerError() {
+        $this->debug(__METHOD__);
+        
+        // build options and data
+        $options_array = $this->buildPluginOptions();
+        $builders = $this->buildDataAddPublicAccount();
+
+        //Admin: should add a public account
+        $_POST['action'] = "add account";
+        $_POST['instance_id'] = 2;
+        $_POST['owner_id'] = 3;
+        $_POST['screen_name'] = 'tv3cat';
+
+        $owner_dao = DAOFactory::getDAO('OwnerDAO');
+        $this->simulateLogin('admin@example.com', true, true);
+        $owner = $owner_dao->getByEmail(Session::getLoggedInUser());        
+        $controller = new TwitterPluginConfigurationController($owner, 'twitter');
+
+        //process controller
+        $controller->go();
+
+        $v_mgr = $controller->getViewManager();
+        $error_msgs = $v_mgr->getTemplateDataItem('error_msgs');
+        $this->assertNotNull($error_msgs);
+        $this->assertEqual($error_msgs['add_public_account'], 'Pair owner_id = 3 and instance_id = 2 not exist !!');
+        $this->assertNull($v_mgr->getTemplateDataItem('success_msgs'));
+    }
+
+    public function testAddPublicAccountAsAdminInstanceError() {
+        $this->debug(__METHOD__);
+        
+        // build options and data
+        $options_array = $this->buildPluginOptions();
+        $builders = $this->buildDataAddPublicAccount();
+
+        //Admin: should add a public account
+        $_POST['action'] = "add account";
+        $_POST['instance_id'] = 3;
+        $_POST['owner_id'] = 2;
+        $_POST['screen_name'] = 'tv3cat';
+
+        $owner_dao = DAOFactory::getDAO('OwnerDAO');
+        $this->simulateLogin('admin@example.com', true, true);
+        $owner = $owner_dao->getByEmail(Session::getLoggedInUser());        
+        $controller = new TwitterPluginConfigurationController($owner, 'twitter');
+
+        //process controller
+        $controller->go();
+
+        $v_mgr = $controller->getViewManager();
+        $error_msgs = $v_mgr->getTemplateDataItem('error_msgs');
+        $this->assertNotNull($error_msgs);
+        $this->assertEqual($error_msgs['add_public_account'], 'Pair owner_id = 2 and instance_id = 3 not exist !!');
+        $this->assertNull($v_mgr->getTemplateDataItem('success_msgs'));
+    }
+
+    public function testAddPublicAccountAsAdminTwitterAccountIncorrect() {
+        $this->debug(__METHOD__);
+        
+        // build options and data
+        $options_array = $this->buildPluginOptions();
+        $builders = $this->buildDataAddPublicAccount();
+
+        //Admin: should add a public account
+        $_POST['action'] = "add account";
+        $_POST['instance_id'] = 2;
+        $_POST['owner_id'] = 2;
+        $_POST['screen_name'] = 'tv3caterror';
+
+        $owner_dao = DAOFactory::getDAO('OwnerDAO');
+        $this->simulateLogin('admin@example.com', true, true);
+        $owner = $owner_dao->getByEmail(Session::getLoggedInUser());        
+        $controller = new TwitterPluginConfigurationController($owner, 'twitter');
+
+        //process controller
+        $controller->go();
+
+        $v_mgr = $controller->getViewManager();
+        $error_msgs = $v_mgr->getTemplateDataItem('error_msgs');
+        $this->assertNotNull($error_msgs);
+        $this->debug($error_msgs['add_public_account']);
+        $this->assertEqual($error_msgs['add_public_account'], 'Twitter account tv3caterror not exists!');
+        $this->assertNull($v_mgr->getTemplateDataItem('success_msgs'));
     }
 }

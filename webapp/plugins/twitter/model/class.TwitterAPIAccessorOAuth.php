@@ -92,12 +92,12 @@ class TwitterAPIAccessorOAuth {
      */
     public function __construct($oauth_access_token, $oauth_access_token_secret, $oauth_consumer_key,
     $oauth_consumer_secret, $num_twitter_errors, $log=true) {
-        $this->$oauth_access_token = $oauth_access_token;
-        $this->$oauth_access_token_secret = $oauth_access_token_secret;
+        $this->oauth_access_token = $oauth_access_token;
+        $this->oauth_access_token_secret = $oauth_access_token_secret;
         $this->log = $log;
 
-        $this->to = new TwitterOAuthThinkUp($oauth_consumer_key, $oauth_consumer_secret, $this->$oauth_access_token,
-        $this->$oauth_access_token_secret);
+        $this->to = new TwitterOAuthThinkUp($oauth_consumer_key, $oauth_consumer_secret, $this->oauth_access_token,
+        $this->oauth_access_token_secret);
         $this->endpoints = $this->prepAPI();
 
         $logger = Logger::getInstance();
@@ -240,6 +240,19 @@ class TwitterAPIAccessorOAuth {
             return self::convertJSONtoTweetArray($json);
         }
         return null;
+    }
+    /**
+     * Convert JSON errors codes to array.
+     * @param str $error_data
+     * @return array
+     */
+    public function parseJSONErrorCodeAPI($error_data) {
+        $json = JSONDecoder::decode($error_data);
+        $parsed_payload = array();
+        if (isset($json->errors)) {
+            $parsed_payload['error'] = $json->errors[0]->code;
+        }
+        return $parsed_payload;
     }
     /**
      * Convert JSON representation of tweet to an array.

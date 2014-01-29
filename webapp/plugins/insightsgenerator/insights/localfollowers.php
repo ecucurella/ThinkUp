@@ -1,7 +1,12 @@
 <?php
 /*
+<<<<<<< HEAD
  Plugin Name: Local followers
  Description: Followers whose locations are the same as yours.
+=======
+ Plugin Name: Local Followers
+ Description: Followers whose location is the same as yours.
+>>>>>>> origin/twitter-configure-and-crawl-public-accounts-rc
  */
 
 /**
@@ -50,8 +55,7 @@ class LocalFollowersInsight extends InsightPluginParent implements InsightPlugin
                     $insight_text = "<strong>"
                     .(count($followers) > 1 ? count($followers)." people" : "1 person")
                     ."</strong> in ".$user->location." ".$this->terms->getPhraseForAddingAsFriend($this->username).".";
-
-                    $this->insight_dao->insertInsight('local_followers', $instance->id, $this->insight_date,
+                    $this->insight_dao->insertInsightDeprecated('local_followers', $instance->id, $this->insight_date,
                     "New neighbors:", $insight_text, basename(__FILE__, '.php'),
                     Insight::EMPHASIS_LOW, serialize($followers));
                 }
