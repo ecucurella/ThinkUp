@@ -741,12 +741,13 @@ class FacebookCrawler {
                 $output->data[] = $like;
                 $output->count++;
             }
-            if (!empty($likes->paging->next)) {
+            /*if (!empty($likes->paging->next)) {
                 $next_url = $likes->paging->next . '&access_token=' . $this->access_token;
                 $likes = FacebookGraphAPIAccessor::rawApiRequest($next_url);
             } else {
                 $likes = null;
-            }
+            }*/
+            $likes = null;
         }
         return $output;
     }
