@@ -70,11 +70,14 @@ $plugin_tests->add(new TestOfFoursquarePluginConfigurationController());
 $plugin_tests->add(new TestOfYouTubeCrawler());
 $plugin_tests->add(new TestOfYouTubePlugin());
 $plugin_tests->add(new TestOfYouTubePluginConfigurationController());
+<<<<<<< HEAD
 if ($version[0] >= 5 && $version[1] >= 3) { //only run Instagram tests if PHP 5.3
     $plugin_tests->add(new TestOfInstagramPlugin());
     $plugin_tests->add(new TestOfInstagramCrawler());
     $plugin_tests->add(new TestOfInstagramPluginConfigurationController());
 }
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
 $plugin_tests->add(new TestOfInsightPluginParent());
 $plugin_tests->add(new TestOfInsightsGeneratorPluginConfigurationController());
 $plugin_tests->add(new TestOfInsightsGeneratorPlugin());

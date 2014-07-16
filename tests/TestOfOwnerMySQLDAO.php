@@ -112,7 +112,10 @@ class TestOfOwnerMySQLDAO extends ThinkUpUnitTestCase {
         $this->assertEqual($existing_owner->account_status, '');
         $this->assertEqual($existing_owner->api_key, 'c9089f3c9adaf0186f6ffb1ee8d6501c');
         $this->assertEqual($existing_owner->email_notification_frequency, 'both');
+<<<<<<< HEAD
         $this->assertEqual($existing_owner->timezone, 'UTC');
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
     }
 
     /**

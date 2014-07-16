@@ -64,7 +64,11 @@ SQL;
 
     public function getById($id) {
         $q = 'SELECT id,full_name,email,is_admin,last_login,is_activated,password_token,' .
+<<<<<<< HEAD
             'account_status,failed_logins,api_key,email_notification_frequency,timezone ' .
+=======
+            'account_status,failed_logins,api_key,email_notification_frequency ' .
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
             'FROM #prefix#owners AS o WHERE id = :id';
         $vars = array(
             ':id'=>$id
@@ -336,7 +340,11 @@ SQL;
              SET email_notification_frequency=:email_notification_frequency
              WHERE email=:email";
         if ($this->profiler_enabled) { Profiler::setDAOMethod(__METHOD__); }
+<<<<<<< HEAD
         $stmt = $this->execute($q, array(':email_notification_frequency' => $email_notification_frequency,
+=======
+        $stmt = $this->execute($q, array(':email_notification_frequency' => $email_notification_frequency, 
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
         ':email' => $email));
         return $this->getUpdateCount($stmt);
     }

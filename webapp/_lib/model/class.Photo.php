@@ -20,7 +20,11 @@
  * You should have received a copy of the GNU General Public License along with ThinkUp.  If not, see
  * <http://www.gnu.org/licenses/>.
  *
+<<<<<<< HEAD
  * Photo Class
+=======
+ * Photo class
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
  *
  * This class represents a photo posted on networks like Instagram.
  *
@@ -63,4 +67,8 @@ class Photo extends Post {
         $this->low_resolution_url = $val['low_resolution_url'];
         $this->thumbnail_url = $val['thumbnail_url'];
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea

@@ -148,8 +148,13 @@ class TestOfFacebookPlugin extends ThinkUpUnitTestCase {
 
     public function testCrawlWithSessionExpiredAuthError() {
         //build active instance owned by a owner
+<<<<<<< HEAD
         $instance_with_autherror = array('id'=>5, 'network_username'=>'Liz Lemon',
         'network_user_id'=>'123456-session-expired', 'network_viewer_id'=>'123456-session-expired', 'last_post_id'=>'0',
+=======
+        $instance_with_autherror = array('id'=>5, 'network_username'=>'Liz Lemon', 'network_user_id'=>'123456',
+        'network_viewer_id'=>'123456', 'last_post_id'=>'0',
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
         'total_posts_in_system'=>'0', 'total_replies_in_system'=>'0',
         'total_follows_in_system'=>'0', 'is_archive_loaded_replies'=>'0',
         'is_archive_loaded_follows'=>'0', 'crawler_last_run'=>'', 'earliest_reply_in_system'=>'',

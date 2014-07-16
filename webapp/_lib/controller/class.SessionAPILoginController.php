@@ -53,12 +53,20 @@ class SessionAPILoginController extends ThinkUpController {
         if (!isset($_GET['success_redir']) || !isset($_GET['failure_redir'])
         || $_GET['success_redir'] == "" || $_GET['failure_redir'] == "") {
             if (!isset($_GET['success_redir']) || $_GET['success_redir'] == "") {
+<<<<<<< HEAD
                 $controller = new LoginController(true);
+=======
+                $controller = new LoginController();
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
                 $controller->addErrorMessage('No success redirect specified');
                 return $controller->go();
             }
             if (!isset($_GET['failure_redir']) || $_GET['failure_redir'] == "") {
+<<<<<<< HEAD
                 $controller = new LoginController(true);
+=======
+                $controller = new LoginController();
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
                 $controller->addErrorMessage('No failure redirect specified');
                 return $controller->go();
             }

@@ -18,4 +18,8 @@ matrix:
 
 before_script: extras/dev/travis/before.sh
 
+<<<<<<< HEAD
 script: php tests/all_tests.php
+=======
+script: php tests/all_unit_tests.php
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea

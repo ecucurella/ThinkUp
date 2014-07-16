@@ -34,7 +34,10 @@ webapp/plugins/*
 !webapp/plugins/twitter/
 !webapp/plugins/twitterrealtime/
 !webapp/plugins/youtube/
+<<<<<<< HEAD
 !webapp/plugins/instagram/
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
 
 # ThinkUpLLC-specific extensions
 thinkupllc*

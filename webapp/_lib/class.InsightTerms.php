@@ -122,10 +122,13 @@ class InsightTerms {
                 return "followed ".$user;
                 break;
 
+<<<<<<< HEAD
             case 'instagram':
                 return "followed ".$user;
                 break;
 
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
             case 'google+':
                 return "added ".$user." to new circles";
                 break;
@@ -156,10 +159,13 @@ class InsightTerms {
                 return (!$plural) ? 'checkin' : 'checkins';
                 break;
 
+<<<<<<< HEAD
             case 'instagram':
                 return (!$plural) ? 'photo' : 'photos';
                 break;
 
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
             case 'youtube':
                 return (!$plural) ? 'video' : 'videos';
                 break;
@@ -222,10 +228,13 @@ class InsightTerms {
                 return (!$plural) ? 'retweet' : 'retweets';
                 break;
 
+<<<<<<< HEAD
             case 'instagram':
                 return (!$plural) ? 'regram' : 'regrams';
                 break;
 
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
             default:
                 return (!$plural) ? 'reshare' : 'reshares';
                 break;
@@ -248,11 +257,14 @@ class InsightTerms {
                 return (!$plural) ? 'viewer' : 'viewers';
                 break;
 
+<<<<<<< HEAD
 
             case 'instagram':
                 return (!$plural) ? 'follower' : 'followers';
                 break;
 
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
             default:
                 return (!$plural) ? 'friend' : 'friends';
                 break;
@@ -308,10 +320,13 @@ class InsightTerms {
                 return 'retweeted';
                 break;
 
+<<<<<<< HEAD
             case 'instagram':
                 return 'regrammed';
                 break;
 
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
             default:
                 return 'reshared';
                 break;

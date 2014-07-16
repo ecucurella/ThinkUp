@@ -473,6 +473,10 @@ class Utils {
      * @return bool Whether in test mode
      */
     public static function isTest() {
+<<<<<<< HEAD
         return (getenv("MODE")=="TESTS" || (isset($_COOKIE['TU_MODE']) && $_COOKIE['TU_MODE']=='TESTS'));
+=======
+        return (isset($_SESSION["MODE"]) && $_SESSION["MODE"] == "TESTS") || getenv("MODE")=="TESTS";
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
     }
 }

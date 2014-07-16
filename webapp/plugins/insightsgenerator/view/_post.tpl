@@ -63,10 +63,13 @@
                         <br>
                         <iframe id="ytplayer" type="text/html" width="427" height="260" src="http://www.youtube.com/embed/{$post->post_id}"frameborder="0"/></iframe>
                     {/if}
+<<<<<<< HEAD
                     {if $post->network == 'instagram'}
                         <br>
                         <img src={$post->low_resolution_url}> <br>
                     {/if}
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
                     {if $post->network == 'foursquare'}From {$post->location}{/if}
             {/if}
 

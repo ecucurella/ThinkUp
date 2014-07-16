@@ -122,6 +122,7 @@ class FacebookPluginConfigurationController extends PluginConfigurationControlle
                 }
             }
         }
+<<<<<<< HEAD
 
         if ($this->do_show_add_button) {
             $params = array('scope'=>'read_stream,user_likes,user_location,user_website,'.
@@ -130,6 +131,16 @@ class FacebookPluginConfigurationController extends PluginConfigurationControlle
             'redirect_uri'=> (Utils::getApplicationURL(). 'account/?p=facebook')
             );
 
+=======
+
+        if ($this->do_show_add_button) {
+            $params = array('scope'=>'read_stream,user_likes,user_location,user_website,'.
+            'read_friendlists,friends_location,manage_pages,read_insights,manage_pages',
+            'state'=>SessionCache::get('facebook_auth_csrf'),
+            'redirect_uri'=> (Utils::getApplicationURL(). 'account/?p=facebook')
+            );
+
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
             $fbconnect_link = $facebook->getLoginUrl($params);
             $this->addToView('fbconnect_link', $fbconnect_link);
         }

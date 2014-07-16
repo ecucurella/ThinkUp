@@ -97,7 +97,10 @@ $model_tests->add(new TestOfHashtagPostMySQLDAO());
 $model_tests->add(new TestOfInstanceHashtagMySQLDAO());
 $model_tests->add(new TestOfVideoMySQLDAO());
 $model_tests->add(new TestOfPhotoMySQLDAO());
+<<<<<<< HEAD
 $model_tests->add(new TestOfCookieMySQLDAO());
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
 
 $tr = new TextReporter();
 list($usec, $sec) = explode(" ", microtime());

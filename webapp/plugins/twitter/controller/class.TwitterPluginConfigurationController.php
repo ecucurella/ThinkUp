@@ -69,7 +69,12 @@ class TwitterPluginConfigurationController extends PluginConfigurationController
                 /* Request tokens from twitter */
                 $token_array = $twitter_oauth->getRequestToken(Utils::getApplicationURL(true)."account/?p=twitter");
 
+<<<<<<< HEAD
                 if (isset($token_array['oauth_token']) || Utils::isTest()) {
+=======
+                if (isset($token_array['oauth_token'])
+                || (isset($_SESSION["MODE"]) && $_SESSION["MODE"] == "TESTS") || getenv("MODE")=="TESTS") { //testing
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
                     $token = $token_array['oauth_token'];
                     SessionCache::put('oauth_request_token_secret', $token_array['oauth_token_secret']);
 

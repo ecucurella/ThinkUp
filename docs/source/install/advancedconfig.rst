@@ -21,6 +21,7 @@ customize the location of the folder where ThinkUp writes its cache and data bac
 
 The default value is ``$THINKUP_CFG['source_root_path'] . 'data/'``.
 
+<<<<<<< HEAD
 use_db_sessions
 ---------------
 
@@ -31,6 +32,8 @@ To store ``$_SESSION`` data in the database instead of on the filesystem (PHP's 
 The `PHP Security Consortium recommends storing session data in a database <http://phpsec.org/projects/guide/5.html>`_
 versus on the filesystem to avoid potential exposure of sensitive app data to other apps or users on shared servers.
 
+=======
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
 mandrill_api_key
 ----------------
 

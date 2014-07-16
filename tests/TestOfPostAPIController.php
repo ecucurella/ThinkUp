@@ -3010,4 +3010,8 @@ class TestOfPostAPIController extends ThinkUpUnitTestCase {
         $installer_dao = DAOFactory::getDAO('InstallerDAO');
         $this->assertTrue(array_search($prefix . "posts", $installer_dao->getTables()) !== false);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea

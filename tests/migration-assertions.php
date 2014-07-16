@@ -1047,13 +1047,21 @@ $MIGRATIONS = array(
 
      /* 2.0-beta.8 */
     '2.0-beta.8' => array(
+<<<<<<< HEAD
         'zip_url' => 'https://www.thinkup.com/downloads/beta/thinkup-2.0-beta.8.zip',
+=======
+        'zip_url' => 'https://thinkup.com/downloads/beta/thinkup-2.0-beta.8.zip',
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
         'migrations' => 0,
     ),
 
      /* 2.0-beta.9 */
     '2.0-beta.9' => array(
+<<<<<<< HEAD
         'zip_url' => 'https://www.thinkup.com/downloads/beta/thinkup-2.0-beta.9.zip',
+=======
+        'zip_url' => 'https://thinkup.com/downloads/beta/thinkup-2.0-beta.9.zip',
+>>>>>>> 69c457d591ebcd4950f0be0111bae106cf1ac0ea
         'migrations' => 0,
         'migration_assertions' => array(
             'sql' => array(
